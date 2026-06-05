@@ -1,4 +1,5 @@
 # Déploiement Coolify — auto-deploy depuis la branche main
+# Variables d'environnement : gérées uniquement dans l'UI Coolify (pas de lock compose)
 services:
   backend:
     build:
@@ -11,17 +12,6 @@ services:
       - "8000"
     environment:
       PORT: "8000"
-      CAROUSEL_RENDER_CONCURRENCY: ${CAROUSEL_RENDER_CONCURRENCY:-1}
-      PUBLIC_URL: ${DASHBOARD_URL}
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
-      RUNWARE_API_KEY: ${RUNWARE_API_KEY}
-      REPLICATE_API_TOKEN: ${REPLICATE_API_TOKEN}
-      UPLOAD_POST_API_KEY: ${UPLOAD_POST_API_KEY}
-      UPLOAD_POST_USER: ${UPLOAD_POST_USER}
-      FONT_SCALE: ${FONT_SCALE:-1.0}
-      APP_PASSWORD: ${APP_PASSWORD}
-      AUTH_SECRET: ${AUTH_SECRET}
-      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\""]
       interval: 30s
@@ -33,13 +23,9 @@ services:
     build:
       context: ./dashboard
       dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${API_URL:-https://placeholder.invalid}
-        NEXT_PUBLIC_AUTH_REQUIRED: ${AUTH_REQUIRED:-true}
     restart: unless-stopped
     environment:
       INTERNAL_API_URL: http://backend:8000
-      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
     expose:
       - "3000"
     depends_on:
