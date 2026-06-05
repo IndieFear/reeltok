@@ -13,6 +13,14 @@ try:
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
+# Flags requis pour Chromium dans Docker/Railway (évite les blocages sur /dev/shm)
+CHROMIUM_DOCKER_ARGS = [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+]
+PLAYWRIGHT_TIMEOUT_MS = int(os.getenv("PLAYWRIGHT_TIMEOUT_MS", "30000"))
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_INTRO_TEMPLATE = ROOT / "backend" / "templates" / "intro" / "leafee-v2.html"
@@ -256,29 +264,7 @@ def _create_intro_image_from_html(
         "transform: scale(1.0);",
     )
 
-    # Créer un fichier HTML temporaire
-    temp_html = output_path.parent / f"_temp_{output_path.stem}.html"
-    temp_html.write_text(html_content, encoding="utf-8")
-
-    try:
-        # Utiliser Playwright pour faire un screenshot
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page(viewport={"width": 1080, "height": 1920})
-            page.goto(temp_html.resolve().as_uri())
-            # Attendre que le script JS ait fini de formater le texte
-            page.wait_for_timeout(1000)
-            # Screenshot uniquement du .phone-container
-            phone_container = page.locator(".phone-container")
-            phone_container.screenshot(path=str(output_path), type="jpeg", quality=95)
-            browser.close()
-
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        return output_path
-    finally:
-        # Nettoyer le fichier temporaire
-        if temp_html.exists():
-            temp_html.unlink()
+    return _render_html_screenshot(html_content, output_path, temp_prefix="_temp_intro")
 
 
 def _parse_hex_color(value: str | None, fallback: Tuple[int, int, int, int]) -> Tuple[int, int, int, int]:
@@ -501,20 +487,34 @@ def _create_tip_image_from_html(
         "transform: scale(1.0);",
     )
 
-    temp_html = output_path.parent / f"_temp_tip_{output_path.stem}.html"
-    temp_html.write_text(html_content, encoding="utf-8")
+    return _render_html_screenshot(html_content, output_path, temp_prefix="_temp_tip")
 
+
+def _render_html_screenshot(html_content: str, output_path: Path, temp_prefix: str) -> Path:
+    """Rend un fichier HTML en JPEG via Playwright (compatible Docker)."""
+    temp_html = output_path.parent / f"{temp_prefix}_{output_path.stem}.html"
+    temp_html.write_text(html_content, encoding="utf-8")
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page(viewport={"width": 1080, "height": 1920})
-            page.goto(temp_html.resolve().as_uri())
-            page.wait_for_timeout(1000)
-            phone_container = page.locator(".phone-container")
-            phone_container.screenshot(path=str(output_path), type="jpeg", quality=95)
-            browser.close()
-
+            browser = p.chromium.launch(headless=True, args=CHROMIUM_DOCKER_ARGS)
+            try:
+                page = browser.new_page(viewport={"width": 1080, "height": 1920})
+                page.goto(
+                    temp_html.resolve().as_uri(),
+                    timeout=PLAYWRIGHT_TIMEOUT_MS,
+                    wait_until="load",
+                )
+                page.wait_for_timeout(1000)
+                page.locator(".phone-container").screenshot(
+                    path=str(output_path),
+                    type="jpeg",
+                    quality=95,
+                    timeout=PLAYWRIGHT_TIMEOUT_MS,
+                )
+            finally:
+                browser.close()
         output_path.parent.mkdir(parents=True, exist_ok=True)
+        print(f"[playwright] Screenshot OK: {output_path.name}")
         return output_path
     finally:
         if temp_html.exists():

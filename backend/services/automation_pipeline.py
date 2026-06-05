@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import logging
+import os
 import random
 import shutil
 import uuid
@@ -31,7 +32,9 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 TEMPLATES_DIR = ROOT / "backend" / "templates"
 LEAFEE_IMAGE = ROOT / "assets" / "leafee.jpg"
 MAX_CONCURRENT_IMAGE_GENERATIONS = 6
-MAX_CONCURRENT_CAROUSEL_RENDERS = 6
+MAX_CONCURRENT_CAROUSEL_RENDERS = max(
+    1, int(os.getenv("CAROUSEL_RENDER_CONCURRENCY", "1"))
+)
 
 SEVEN_SLIDE_TYPES = {"top-x", "top-signs", "decor", "astrology"}
 

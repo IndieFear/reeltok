@@ -2,6 +2,7 @@
 
 import asyncio
 import base64
+import os
 import tempfile
 from pathlib import Path
 
@@ -13,7 +14,9 @@ from image_overlay import create_intro_image, create_tip_image
 ROOT = Path(__file__).resolve().parent.parent.parent
 
 router = APIRouter()
-MAX_CONCURRENT_CAROUSEL_RENDERS = 6
+MAX_CONCURRENT_CAROUSEL_RENDERS = max(
+    1, int(os.getenv("CAROUSEL_RENDER_CONCURRENCY", "1"))
+)
 
 
 class SlideContent(BaseModel):
@@ -103,6 +106,7 @@ async def generate_carousel_batch(
                         template_html_path=tpl if tpl.exists() else None,
                         title_bg_color=slide.get("title_bg_color"),
                     )
+            print(f"[carousel] Slide {i} terminée")
             return out_path
 
         output_paths = await asyncio.gather(
