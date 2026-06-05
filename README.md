@@ -44,9 +44,9 @@ Ouvre http://localhost:3000
 - `/automation` — import Google Sheets + publication planifiée
 - `/config` — configuration des prompts
 
-## Déploiement (prévu)
+## Déploiement
 
+- **Backend** : Railway (Docker + Playwright) — voir [DEPLOY.md](DEPLOY.md)
 - **Frontend** : Vercel (`dashboard/`)
-- **Backend** : Railway (Docker)
 
-Voir [DASHBOARD_README.md](DASHBOARD_README.md) et [PARAMETERS.md](PARAMETERS.md) pour plus de détails.
+Guide pas à pas : variables d'env, volume persistant, domaine public.

@@ -36,5 +36,7 @@ Ouvre http://localhost:3000
 
 ## Déploiement
 
-- **Frontend** : Vercel (`dashboard/`). Configurer `NEXT_PUBLIC_API_URL` vers l'URL du backend.
-- **Backend** : Railway. Variables d'env : `GEMINI_API_KEY`, `RUNWARE_API_KEY`, `REPLICATE_API_TOKEN`, `UPLOAD_POST_USER`, `UPLOAD_POST_API_KEY`. Installer Chromium via Docker.
+Voir le guide complet : [DEPLOY.md](../DEPLOY.md)
+
+- **Vercel** : root directory `dashboard/`, variable `NEXT_PUBLIC_API_URL`
+- **Railway** : Dockerfile à la racine, volume sur `/app/data`, 2 Go+ RAM
