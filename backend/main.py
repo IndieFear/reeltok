@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="ReelTok API",
     description="API ReelTok — génération et publication de carrousels TikTok",
-    version="1.0.0",
+    version="1.0.1",
     lifespan=lifespan,
 )
 
