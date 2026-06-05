@@ -1,0 +1,16 @@
+{
+  "intro": [
+    {
+      "id": "leafee-v2",
+      "name": "Leafee Orange",
+      "variables": ["title", "body", "bgImage", "title_bg_color"]
+    }
+  ],
+  "tip": [
+    {
+      "id": "leafee-v2",
+      "name": "Leafee Tag + bloc",
+      "variables": ["tag", "body", "bgImage", "title_bg_color"]
+    }
+  ]
+}

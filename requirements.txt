@@ -1,0 +1,10 @@
+Pillow
+google-genai
+python-dotenv
+requests
+playwright
+fastapi
+uvicorn[standard]
+python-multipart
+runware
+
