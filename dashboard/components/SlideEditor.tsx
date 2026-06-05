@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { ImageLibrary } from "./ImageLibrary";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ImageUploader } from "./ImageUploader";
 import { TemplateSelector } from "./TemplateSelector";
-import { fetchLeafeeImage, type SlideContent } from "@/lib/api";
+import { fetchLeafeeImage, fetchUserImage, type SlideContent, type UserImage } from "@/lib/api";
 import { toast } from "sonner";
 import type { TemplateInfo } from "@/lib/api";
 
@@ -49,6 +50,25 @@ export function SlideEditor({
   const isIntro = slideIndex === 0;
   const isLeafeeSlide = slideIndex === 3;
   const [loadingLeafee, setLoadingLeafee] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [loadingLibraryImage, setLoadingLibraryImage] = useState(false);
+
+  const handlePickFromLibrary = useCallback(
+    async (image: UserImage) => {
+      setLoadingLibraryImage(true);
+      try {
+        const file = await fetchUserImage(image.id);
+        onImageChange(slideIndex, file);
+        setShowLibrary(false);
+        toast.success("Image chargée depuis la bibliothèque");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Erreur chargement image");
+      } finally {
+        setLoadingLibraryImage(false);
+      }
+    },
+    [slideIndex, onImageChange],
+  );
 
   const handleUseLeafeeImage = useCallback(async () => {
     setLoadingLeafee(true);
@@ -112,7 +132,17 @@ export function SlideEditor({
         value={images[slideIndex]}
         onChange={(f) => onImageChange(slideIndex, f)}
         label="Image de fond"
+        onOpenLibrary={() => setShowLibrary((v) => !v)}
       />
+      {showLibrary && (
+        <div className="rounded-xl border border-stone-200 bg-stone-50 p-3">
+          {loadingLibraryImage ? (
+            <p className="text-sm text-stone-500">Chargement…</p>
+          ) : (
+            <ImageLibrary compact title="Choisir une image" onSelect={handlePickFromLibrary} />
+          )}
+        </div>
+      )}
       {supportsTitleBgColor && (
         <div className="space-y-2">
           <Label>Couleur principale</Label>

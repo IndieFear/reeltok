@@ -76,6 +76,14 @@ def _get_reference_for_first_image(reference_images: list[str] | None) -> list[s
     """Retourne la liste des images de référence pour la 1ère image (selfie)."""
     if reference_images and len(reference_images) > 0:
         first = reference_images[0]
+        # Bibliothèque utilisateur : user:{uuid}
+        if first.startswith("user:"):
+            from backend.services.user_image_library import resolve_user_image_b64
+
+            image_id = first[5:].strip()
+            b64 = resolve_user_image_b64(image_id)
+            if b64:
+                return [b64]
         # Cas spécial : identifiant interne type "fille1", "fille2", ...
         # On charge alors directement le fichier local correspondant et on renvoie du base64,
         # ce qui évite d'envoyer une URL localhost non accessible à l'API Runware.

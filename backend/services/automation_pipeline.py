@@ -24,6 +24,7 @@ from backend.routers.images import (
     _try_grok_fallback_sync,
 )
 from backend.routers.templates import get_girls_images
+from backend.services.user_image_library import get_image_path
 from backend.services.automation_store import append_job_log, carousel_dir_for_job, update_job
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,8 @@ def resolve_reference_image(config: dict[str, Any]) -> str:
     if not available:
         return "fille1"
     ref = (config.get("reference_image") or "random").strip()
+    if ref.startswith("user:") and get_image_path(ref[5:].strip()):
+        return ref
     if ref == "random":
         return random.choice(available)
     if ref in available:

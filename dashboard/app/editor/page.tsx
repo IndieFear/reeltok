@@ -16,12 +16,16 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { SlideEditor } from "@/components/SlideEditor";
 import { CarouselPreview } from "@/components/CarouselPreview";
+import { ImageLibrary } from "@/components/ImageLibrary";
 import {
   deleteContentHistoryEntry,
   fetchContentHistoryImage,
   fetchLeafeeImage,
   fetchGirlImage,
+  fetchUserImage,
   listGirlsImages,
+  userImagePreviewUrl,
+  userImageRefId,
   generateContent,
   generateCarousel,
   generateImagesFromPrompts,
@@ -40,6 +44,7 @@ import {
   type CarouselContent,
   type TemplatesResponse,
   type GirlsImage,
+  type UserImage,
 } from "@/lib/api";
 import { toast } from "sonner";
 import {
@@ -180,8 +185,9 @@ export default function EditorPage() {
   const [images, setImages] = useState<(File | null)[]>(Array(6).fill(null));
   const [faceRefFile, setFaceRefFile] = useState<File | null>(null);
   const [selectedFaceRefId, setSelectedFaceRefId] = useState<string>("fille1");
-  /** Si true, la référence selfie vient d’un fichier local, pas de fille1/2/3. */
-  const [isCustomFaceRef, setIsCustomFaceRef] = useState(false);
+  const [faceRefMode, setFaceRefMode] = useState<"preset" | "upload" | "library">("preset");
+  const [selectedLibraryFaceId, setSelectedLibraryFaceId] = useState<string | null>(null);
+  const [showFaceLibrary, setShowFaceLibrary] = useState(false);
   const [selectedImageModel, setSelectedImageModel] = useState<ImageModel>("runware");
   const [girlsImages, setGirlsImages] = useState<GirlsImage[]>([]);
   const faceFileInputRef = useRef<HTMLInputElement>(null);
@@ -259,8 +265,10 @@ export default function EditorPage() {
   }, [contentType]);
 
   const buildImageReferenceImages = useCallback(async (): Promise<string[] | undefined> => {
-    if (!faceRefFile) return undefined;
-    if (isCustomFaceRef) {
+    if (faceRefMode === "library" && selectedLibraryFaceId) {
+      return [userImageRefId(selectedLibraryFaceId)];
+    }
+    if (faceRefMode === "upload" && faceRefFile) {
       try {
         const dataUrl = await fileToDataUrl(faceRefFile);
         return [dataUrl];
@@ -268,8 +276,11 @@ export default function EditorPage() {
         return undefined;
       }
     }
-    return [selectedFaceRefId];
-  }, [faceRefFile, isCustomFaceRef, selectedFaceRefId]);
+    if (faceRefMode === "preset") {
+      return [selectedFaceRefId];
+    }
+    return undefined;
+  }, [faceRefMode, selectedLibraryFaceId, faceRefFile, selectedFaceRefId]);
 
   const applyGeminiContent = useCallback((content: CarouselContent) => {
     const targetSlideCount = content.tips.length + 1;
@@ -719,17 +730,34 @@ export default function EditorPage() {
       return;
     }
     setFaceRefFile(file);
-    setIsCustomFaceRef(true);
+    setFaceRefMode("upload");
+    setShowFaceLibrary(false);
     toast.success(`Référence selfie : ${file.name}`);
+  }, []);
+
+  const handlePickLibraryFace = useCallback(async (image: UserImage) => {
+    try {
+      const file = await fetchUserImage(image.id);
+      setSelectedLibraryFaceId(image.id);
+      setFaceRefFile(file);
+      setFaceRefMode("library");
+      setShowFaceLibrary(false);
+      toast.success("Référence selfie depuis la bibliothèque");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erreur chargement image");
+    }
   }, []);
 
   const backToPresetFace = useCallback(async () => {
     if (girlsImages.length === 0) {
-      setIsCustomFaceRef(false);
+      setFaceRefMode("preset");
       setFaceRefFile(null);
+      setSelectedLibraryFaceId(null);
       return;
     }
-    setIsCustomFaceRef(false);
+    setFaceRefMode("preset");
+    setSelectedLibraryFaceId(null);
+    setShowFaceLibrary(false);
     const id = selectedFaceRefId && girlsImages.some((g) => g.id === selectedFaceRefId)
       ? selectedFaceRefId
       : girlsImages[0].id;
@@ -782,6 +810,15 @@ export default function EditorPage() {
               <span className="mx-2 text-stone-300">·</span>
               <span className="font-semibold text-stone-950">{imageCount}</span> images
             </div>
+            <Link href="/library">
+              <Button
+                variant="outline"
+                className="h-11 rounded-2xl border-stone-300 bg-white text-stone-900 hover:bg-stone-100"
+              >
+                <ImageIcon className="h-4 w-4" />
+                Bibliothèque
+              </Button>
+            </Link>
             <Link href="/automation">
               <Button
                 variant="outline"
@@ -1182,7 +1219,16 @@ export default function EditorPage() {
                     >
                       Ma photo
                     </Button>
-                    {isCustomFaceRef && girlsImages.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-stone-200 bg-white text-stone-900 hover:bg-stone-100"
+                      onClick={() => setShowFaceLibrary((v) => !v)}
+                    >
+                      Bibliothèque
+                    </Button>
+                    {faceRefMode !== "preset" && girlsImages.length > 0 && (
                       <Button
                         type="button"
                         variant="ghost"
@@ -1194,17 +1240,39 @@ export default function EditorPage() {
                       </Button>
                     )}
                   </div>
-                  {isCustomFaceRef && faceRefFile && (
+                  {faceRefMode === "upload" && faceRefFile && (
                     <p className="mt-2 truncate text-xs text-stone-500" title={faceRefFile.name}>
                       {faceRefFile.name}
                     </p>
                   )}
+                  {faceRefMode === "library" && selectedLibraryFaceId && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <div
+                        className="h-12 w-7 rounded-md border border-stone-200 bg-cover bg-center"
+                        style={{
+                          backgroundImage: `url(${userImagePreviewUrl(selectedLibraryFaceId)})`,
+                        }}
+                      />
+                      <p className="truncate text-xs text-stone-500">Bibliothèque</p>
+                    </div>
+                  )}
+                  {showFaceLibrary && (
+                    <div className="mt-3 rounded-xl border border-stone-200 bg-white p-2">
+                      <ImageLibrary
+                        compact
+                        title="Référence selfie"
+                        selectedId={selectedLibraryFaceId}
+                        onSelect={(image) => void handlePickLibraryFace(image)}
+                      />
+                    </div>
+                  )}
                   {girlsImages.length > 0 && (
                     <Select
                       value={selectedFaceRefId}
-                      disabled={isCustomFaceRef}
+                      disabled={faceRefMode !== "preset"}
                       onValueChange={async (value) => {
-                        setIsCustomFaceRef(false);
+                        setFaceRefMode("preset");
+                        setSelectedLibraryFaceId(null);
                         setSelectedFaceRefId(value);
                         try {
                           const f = await fetchGirlImage(value);

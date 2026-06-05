@@ -25,8 +25,10 @@ import {
   runDueAutomationJobs,
   getContentTypes,
   listGirlsImages,
+  listUserImages,
   IMAGE_MODELS,
   type GirlsImage,
+  type UserImage,
   type AutomationConfig,
   type AutomationJob,
   type AutomationJobDetail,
@@ -90,9 +92,17 @@ function toDatetimeLocalValue(iso: string | null): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function referenceImageLabel(ref: string | null | undefined): string {
+function referenceImageLabel(
+  ref: string | null | undefined,
+  userImages: UserImage[] = [],
+): string {
   if (!ref) return "—";
   if (ref === "random") return "Aléatoire";
+  if (ref.startsWith("user:")) {
+    const id = ref.slice(5);
+    const found = userImages.find((img) => img.id === id);
+    return found ? `Bibliothèque · ${found.filename}` : "Bibliothèque";
+  }
   return ref;
 }
 
@@ -126,6 +136,7 @@ export default function AutomationPage() {
   const [jobs, setJobs] = useState<AutomationJob[]>([]);
   const [contentTypes, setContentTypes] = useState<ContentType[]>([]);
   const [girlsImages, setGirlsImages] = useState<GirlsImage[]>([]);
+  const [userImages, setUserImages] = useState<UserImage[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<AutomationJobDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -194,9 +205,14 @@ export default function AutomationPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [cts, girls] = await Promise.all([getContentTypes(), listGirlsImages()]);
+        const [cts, girls, library] = await Promise.all([
+          getContentTypes(),
+          listGirlsImages(),
+          listUserImages().catch(() => []),
+        ]);
         setContentTypes(cts);
         setGirlsImages(girls);
+        setUserImages(library);
         await refresh();
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Erreur chargement");
@@ -387,6 +403,11 @@ export default function AutomationPage() {
                 Éditeur
               </Button>
             </Link>
+            <Link href="/library">
+              <Button variant="outline" className="border-stone-200 bg-white hover:bg-stone-100">
+                Bibliothèque
+              </Button>
+            </Link>
             <Link href="/config">
               <Button variant="outline" className="border-stone-200 bg-white hover:bg-stone-100">
                 Config prompts
@@ -572,6 +593,15 @@ export default function AutomationPage() {
                           {img.id}
                         </SelectItem>
                       ))}
+                      {userImages.length > 0 && (
+                        <>
+                          {userImages.map((img) => (
+                            <SelectItem key={img.id} value={`user:${img.id}`}>
+                              Bibliothèque · {img.filename}
+                            </SelectItem>
+                          ))}
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -860,8 +890,8 @@ export default function AutomationPage() {
                       <p className="text-stone-400">Référence selfie</p>
                       <p className="font-medium">
                         {selectedDetail.job.reference_image
-                          ? referenceImageLabel(selectedDetail.job.reference_image)
-                          : `${referenceImageLabel(config.reference_image)} (prévu)`}
+                          ? referenceImageLabel(selectedDetail.job.reference_image, userImages)
+                          : `${referenceImageLabel(config.reference_image, userImages)} (prévu)`}
                       </p>
                     </div>
                     <div className="rounded-lg bg-stone-50 px-3 py-2">

@@ -267,6 +267,65 @@ export async function fetchGirlImage(imageId: string): Promise<File> {
   return new File([blob], `${imageId}.png`, { type: "image/png" });
 }
 
+export interface UserImage {
+  id: string;
+  filename: string;
+  mime: string;
+  url: string;
+  created_at: string;
+  size_bytes: number;
+}
+
+export function userImagePreviewUrl(id: string): string {
+  return `/api/user-images/${id}`;
+}
+
+export function userImageRefId(id: string): string {
+  return `user:${id}`;
+}
+
+export async function listUserImages(): Promise<UserImage[]> {
+  const res = await fetch("/api/user-images", { credentials: "include" });
+  if (!res.ok) throw new Error("Erreur chargement bibliothèque");
+  const data = await res.json();
+  return data.images ?? [];
+}
+
+export async function uploadUserImage(file: File): Promise<UserImage> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch("/api/user-images", {
+    method: "POST",
+    body: form,
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || "Upload impossible");
+  }
+  return res.json();
+}
+
+export async function fetchUserImage(id: string): Promise<File> {
+  const res = await fetch(userImagePreviewUrl(id), { credentials: "include" });
+  if (!res.ok) throw new Error("Image introuvable");
+  const blob = await res.blob();
+  const mime = blob.type || "image/jpeg";
+  const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
+  return new File([blob], `library_${id}.${ext}`, { type: mime });
+}
+
+export async function deleteUserImage(id: string): Promise<void> {
+  const res = await fetch(userImagePreviewUrl(id), {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || "Suppression impossible");
+  }
+}
+
 export interface PromptOverride {
   extra_instructions: string;
   full_prompt?: string | null;

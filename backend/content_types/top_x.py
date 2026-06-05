@@ -5,56 +5,42 @@ import json
 from backend.content_types.base import get_schema_example, get_common_instructions, get_image_prompts_instruction
 
 _TOP_X_IMAGE_INSTRUCTION = """
-IMAGE_PROMPTS FOR TOP 5 — ROOM LOGIC (VERY IMPORTANT)
+IMAGE_PROMPTS FOR TOP 5 — PLANT-FOCUSED, NATURAL SCALE (VERY IMPORTANT)
 
-1) If the CATEGORY clearly targets a specific room or location (in ANY language),
-   ALL slides (except the Leafee slide) MUST be in that same room.
-   Examples of room-focused keywords (non‑exhaustive):
-   - French: "salle de bain", "salle de bains", "salle de bain plantes", "plantes pour la chambre",
-     "plantes pour le salon", "plantes pour la cuisine", "plantes pour le bureau"
-   - English: "bathroom plants", "plants for bedroom", "plants for the kitchen", "office plants"
-   - Others: any wording that clearly implies a room or area in the home.
+The plant is the hero, but it must look REAL — normal houseplant size, not macro, not giant.
+Slides 2, 3, 5, 6, 7 show the FULL plant in its pot at natural proportions (medium shot),
+like a real iPhone photo someone would post of their plant at home.
 
-   In that case:
-   - Detect the room (bathroom, bedroom, living room, kitchen, office, balcony, etc.).
-   - Slide 1 selfie AND slides 2, 3, 5, 6, 7 are ALL set in that same room.
-   - Only the composition / angle / furniture / objects vary between slides.
+For each ranked plant slide, describe:
+- The exact species in the tag (e.g. Anthurium, Caladium, Philodendron pink princess)
+- The whole plant visible: pot + stems + leaves at believable indoor size (30–80 cm tall typical)
+- A simple cozy setting (windowsill, shelf, desk corner, side table) — tight crop, NOT a wide room,
+  but enough context to feel natural. Plant occupies roughly 40–60% of the frame, centered or slightly off-center.
+- Natural light, iPhone photo, sharp focus, no bokeh, lived-in and realistic.
 
-2) If the CATEGORY is more generic (eg. "pink plants", "air‑purifying plants", "easy plants"),
-   then you MUST vary the rooms across slides:
-   - Assign one different room per slide (slides 1, 2, 3, 5, 6, 7)
-   - Use rooms from this list:
-     • Living room (sofa, armchair, coffee table, TV stand)
-     • Bedroom (bed, nightstand, dresser, mirror)
-     • Kitchen (counter, island, backsplash, stove)
-     • Bathroom (shelf above sink, vanity, towel rack)
-     • Home office / desk (desk, chair, bookshelf, monitor)
-     • Reading nook (armchair, floor lamp, book stack, blanket)
-     • Entryway (console table, coat rack, mirror)
-     • Balcony / terrace (small table, city view, potted plants)
-     • Dining area (table, sideboard, pendant light)
-     • Windowsill corner (shelf, curtain, natural light)
+SLIDE 1 — SELFIE (intro, plant #5 visible behind or next to her):
+"selfie of a girl. behind or next to her [simple setting: shelf / windowsill / desk corner]: [plant #5] in [pot]
+ at normal size on [surface], a few everyday objects nearby, [lighting]. The plant looks like a real
+ houseplant behind or next to her. iPhone photo, sharp focus, no bokeh,
+ natural and lived-in. high skin texture detail."
 
-In ALL cases:
-- Vary: furniture (sideboard, shelf, desk, nightstand, counter, windowsill),
-  objects (mug, books, vase, lamp, blanket), lighting (morning, golden hour, overcast, afternoon).
+SLIDES 2, 3, 5, 6, 7 — Plant portraits at natural scale (species matches the tag rank):
+"[Simple setting], [plant name] in [pot] on [surface]. Full plant visible at normal indoor size,
+ healthy and realistic. [1–2 small props: mug, book, candle]. [lighting]. iPhone photo, sharp focus,
+ no bokeh, plant is clearly the subject but at real-world scale, cozy home vibe."
 
-SLIDE 1 — SELFIE:
-"selfie of a girl. behind her [ROOM]: [plant] on [surface], [furniture], [objects], [lighting].
- iPhone photo, sharp focus, no bokeh, natural and lived‑in. high skin texture detail."
-
-SLIDES 2, 3, 5, 6, 7 — Full room scenes:
-"[ROOM], [plant] in [pot] on [surface]. [furniture]. [objects]. [lighting].
- iPhone photo, sharp focus, no bokeh, lived‑in, realistic."
+Vary across slides: different species, surfaces (windowsill, wooden shelf, desk, plant stand),
+pots (terracotta, ceramic white, woven basket), lighting (morning, golden hour, overcast).
 
 SLIDE 4 — LEAFEE:
-"Leafee app on phone next to houseplant, soft light, cozy interior, iPhone photo, sharp focus".
+"Leafee app on phone next to a houseplant on a windowsill, soft light, cozy interior, iPhone photo, sharp focus".
 Replaced by Leafee asset in the final carousel.
 
 CRITICAL:
-- For room‑focused categories: SAME room across slides 1, 2, 3, 5, 6, 7.
-- For generic categories: Slide 1 ≠ 2 ≠ 3 ≠ 5 ≠ 6 ≠ 7 (different rooms).
-- Always show full room context, not plant close‑ups.
+- NO macro close-ups, NO leaves filling 80–90% of the frame, NO unrealistic giant plants behind a selfie.
+- NO wide full-room shots either — keep a tight, plant-forward medium shot.
+- Each plant slide must match the species named in the corresponding tip tag.
+- Slides 2, 3, 5, 6, 7 must all look different (different plants, settings, lighting).
 """
 
 
@@ -73,13 +59,13 @@ def build_prompt(keyword: str, num_slides: int = 7) -> str:
         caption=f"My top 5 {keyword} — the ones I actually kept",
         tiktok_desc=f"Top 5 {keyword}.\nMy personal picks.\nScroll to see the full ranking.\n5, 4, then Leafee.\nThen 3, 2, and number one at the end.\n#houseplants #plantsoftiktok",
         image_prompts=[
-            "selfie of a girl. behind her bathroom: Anthurium pink in a white pot on a shelf above the sink, vanity with mirror, towel on rack, soft morning light. iPhone photo, sharp focus, no bokeh, natural and lived-in. high skin texture detail.",
-            "Bathroom scene: Caladium in a ceramic pot on a wooden stool next to the bathtub, tiled walls, towel hanging, candle and skincare bottles on the edge of the tub, warm evening light. iPhone photo, sharp focus, no bokeh, realistic.",
-            "Bathroom shelf: Begonia rex in terracotta pot on open shelving above the toilet, folded towels, framed print, small perfume bottles, diffused overcast light from a frosted window. iPhone, sharp focus, lived-in.",
-            "Leafee app open on a phone resting next to a houseplant on a bathroom vanity, toothbrush holder, soap dispenser, mirror catching soft morning light. iPhone photo, sharp focus, realistic.",
-            "Bathroom corner: Philodendron pink princess in a white pot on a narrow ladder shelf, hanging towel, woven laundry basket, bath mat on the floor, golden hour light streaming through a small window. iPhone, sharp focus, no bokeh.",
-            "Bathroom windowsill: Calathea medallion in a simple pot on the sill, frosted glass window, small bottle of essential oils, neatly folded washcloths, cool overcast light. iPhone photo, realistic, lived-in.",
-            "Bathroom entry area: Anthurium andraeanum on a low bench near the shower, towel hooks on the wall, bathrobe hanging, patterned floor tiles, soft afternoon light. iPhone photo, sharp focus, no bokeh, natural.",
+            "selfie of a girl. behind her a wooden shelf: Anthurium pink princess in a white ceramic pot,  a small mug and book nearby, soft morning window light. The plant looks natural behind her, not zoomed in. iPhone photo, sharp focus, no bokeh, natural and lived-in. high skin texture detail.",
+            "Windowsill scene: Caladium bicolor in a terracotta pot at normal indoor size, full plant visible with heart-shaped pink-veined leaves. small candle on the sill, natural side window light. iPhone photo, sharp focus, no bokeh, plant is the clear subject at real-world scale, cozy home vibe.",
+            "Wooden shelf: Begonia rex in a ceramic pot at normal size, full plant with patterned leaves visible. framed print and perfume bottle nearby, soft overcast light. iPhone photo, sharp focus, lived-in, realistic plant portrait.",
+            "Leafee app open on a phone resting next to a houseplant on a windowsill, soft light, cozy interior, iPhone photo, sharp focus, realistic.",
+            "Desk corner: Philodendron pink princess in a white pot at normal size, full trailing plant visible. laptop edge and mug nearby, golden hour light. iPhone photo, sharp focus, no bokeh, natural indoor plant photo.",
+            "Plant stand by a window: Calathea medallion in a simple pot at normal height, whole plant visible with round patterned leaves. folded throw on a chair in soft background, cool natural light. iPhone photo, sharp focus, realistic.",
+            "Side table: Anthurium andraeanum in terracotta pot at normal size, full plant with glossy red bloom and green leaves. reading glasses and coaster nearby, warm afternoon window light. iPhone photo, sharp focus, no bokeh, cozy and natural.",
         ],
     )
     return (
@@ -106,7 +92,8 @@ def build_prompt(keyword: str, num_slides: int = 7) -> str:
         "CRITICAL: Return exactly 6 tips (one per slide 2-7). Exactly 7 image_prompts (one per slide).\n\n"
         "Be specific: name actual plant species (e.g. Anthurium, Caladium, Philodendron pink princess, Pothos).\n"
         "Keep each tip body to 1-2 short sentences. No newlines inside body text. This ensures the JSON is not truncated.\n\n"
-        "IMAGE_PROMPTS — Each slide = DIFFERENT room (living room, bedroom, kitchen, bathroom, office, entryway, etc.). NEVER repeat. Full room scenes.\n"
+        "IMAGE_PROMPTS — Each plant slide = medium shot of the FULL plant at normal indoor size in a cozy setting. "
+        "Plant-forward but realistic (NOT macro, NOT wide room). Vary species, settings, and lighting.\n"
         + _TOP_X_IMAGE_INSTRUCTION
         + "\nExample structure:\n"
         + json.dumps(schema, ensure_ascii=False, indent=2)
