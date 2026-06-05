@@ -1,21 +1,12 @@
-FROM python:3.12-slim-bookworm
+# Image Playwright pré-installée → build plus rapide, moins de RAM que playwright install --with-deps
+FROM mcr.microsoft.com/playwright/python:v1.52.0-noble
 
 WORKDIR /app
-
-# Dépendances système minimales pour Playwright Chromium
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Chromium + libs système (overlay HTML → image)
-RUN playwright install --with-deps chromium
-
 COPY . .
-
-# Données persistantes (volume Docker reeltok-data → /app/data)
 RUN mkdir -p /app/data
 
 ENV PYTHONUNBUFFERED=1

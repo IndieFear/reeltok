@@ -81,4 +81,5 @@ Serveur **4 Go RAM** minimum (Coolify + Playwright + Next.js).
 | Frontend appelle `localhost:8000` | `API_URL` incorrecte → redeploy **dashboard** |
 | CORS error | `DASHBOARD_URL` doit matcher l'URL du dashboard |
 | Carousel bloque | `CAROUSEL_RENDER_CONCURRENCY=1`, augmenter la RAM |
-| Build timeout | Augmenter le timeout build dans Coolify |
+| Build échoue (exit 255) | Manque de RAM — serveur 4 Go+, redeploy 2×, ou augmente timeout Coolify |
+| `localhost:8000` dans le navigateur | `API_URL` absente au build → coche **Buildtime** + rebuild dashboard |

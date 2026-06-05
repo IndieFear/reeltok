@@ -1,6 +1,8 @@
 services:
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: unless-stopped
     volumes:
       - reeltok-data:/app/data
@@ -24,19 +26,19 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 90s
 
   dashboard:
     build:
       context: ./dashboard
+      dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${API_URL}
+        NEXT_PUBLIC_API_URL: ${API_URL:-https://placeholder.invalid}
     restart: unless-stopped
     expose:
       - "3000"
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
 
 volumes:
   reeltok-data:
