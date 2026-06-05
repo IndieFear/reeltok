@@ -10,6 +10,7 @@ reeltok/
 ├── dashboard/        # Frontend Next.js
 ├── assets/           # Images preset (fille1–9, leafee)
 ├── data/             # Queue automation, historique (local, gitignored)
+├── docker-compose.yml
 └── requirements.txt
 ```
 
@@ -46,6 +47,4 @@ Ouvre http://localhost:3000
 
 ## Déploiement
 
-- **Hetzner + Coolify** (recommandé) : voir [deploy/COOLIFY.md](deploy/COOLIFY.md)
-- **VPS Hetzner** (Docker Compose manuel) : voir [deploy/HETZNER.md](deploy/HETZNER.md)
-- **Railway + Vercel** : voir [DEPLOY.md](DEPLOY.md)
+Déploiement via **Coolify** (Docker Compose) : voir [DEPLOY.md](DEPLOY.md)

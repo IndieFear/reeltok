@@ -9,19 +9,13 @@ __pycache__
 .mypy_cache
 .DS_Store
 
-# Frontend (déployé séparément sur Vercel)
 dashboard/node_modules
 dashboard/.next
 dashboard/out
-dashboard/.vercel
 dashboard/.env*.local
 
-# Données locales (volume Railway en prod)
 data/*
 !data/.gitkeep
 
-# Docs & IDE
 .idea
 .vscode
-*.md
-!README.md

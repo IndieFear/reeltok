@@ -24,7 +24,6 @@ dashboard/node_modules/
 dashboard/.next/
 dashboard/out/
 dashboard/.env*.local
-dashboard/.vercel
 dashboard/*.tsbuildinfo
 dashboard/next-env.d.ts
 
@@ -32,3 +31,4 @@ dashboard/next-env.d.ts
 .idea/
 .vscode/
 *.swp
+dashboard/.vercel/

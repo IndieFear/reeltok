@@ -1,126 +1,75 @@
-# Déploiement ReelTok — Railway + Vercel
+# Déploiement ReelTok — Coolify
 
-## Architecture
+Déploiement via [Coolify](https://coolify.io) (Docker Compose). Coolify gère HTTPS, autodeploy GitHub et le reverse proxy.
 
-| Service | Plateforme | Dossier | URL type |
-|---------|-----------|---------|----------|
-| Backend FastAPI + Playwright | [Railway](https://railway.app) | racine du repo | `https://reeltok-api.up.railway.app` |
-| Dashboard Next.js | [Vercel](https://vercel.com) | `dashboard/` | `https://reeltok.vercel.app` |
+## 1. Créer la ressource
 
----
+1. Coolify → **+ New Resource** → **Public/Private Repository**
+2. Repo : `IndieFear/reeltok`, branche `main`
+3. **Build Pack** : `Docker Compose`
+4. **Docker Compose location** : `docker-compose.yml`
+5. **Base Directory** : `/` (racine)
 
-## 1. Backend sur Railway
+## 2. Variables d'environnement
 
-### Créer le projet
+Dans l'onglet **Environment Variables** (voir `.env.example`) :
 
-1. [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**
-2. Sélectionner `IndieFear/reeltok`
-3. Railway détecte le `Dockerfile` via `railway.toml`
+| Variable | Exemple | Rôle |
+|----------|---------|------|
+| `DASHBOARD_URL` | `https://reeltok.tondomaine.com` | CORS backend |
+| `API_URL` | `https://api.reeltok.tondomaine.com` | Build frontend (`NEXT_PUBLIC_API_URL`) |
+| `GEMINI_API_KEY` | `...` | Génération texte |
+| `RUNWARE_API_KEY` | `...` | Images |
+| `REPLICATE_API_TOKEN` | `...` | Images (optionnel) |
+| `UPLOAD_POST_API_KEY` | `...` | Publication TikTok |
+| `UPLOAD_POST_USER` | `...` | Compte upload-post |
+| `FONT_SCALE` | `1.0` | Taille texte overlay |
+| `CAROUSEL_RENDER_CONCURRENCY` | `1` | Rendu Playwright (1 slide à la fois) |
 
-### Variables d'environnement
+> `API_URL` et `DASHBOARD_URL` doivent être les URLs **HTTPS finales** configurées à l'étape 3.
 
-Dans **Variables** du service :
+## 3. Domaines (2 FQDN)
 
-| Variable | Obligatoire | Description |
-|----------|-------------|-------------|
-| `GEMINI_API_KEY` | oui | Génération de texte |
-| `RUNWARE_API_KEY` | oui* | Images Flux (modèle par défaut) |
-| `REPLICATE_API_TOKEN` | oui* | Images GPT/Grok via Replicate |
-| `UPLOAD_POST_API_KEY` | oui | Publication TikTok |
-| `UPLOAD_POST_USER` | oui | Compte upload-post |
-| `FONT_SCALE` | non | Taille du texte overlay (défaut `1.0`) |
+Assigne un domaine **par service** dans Coolify :
 
-\* Au moins une clé image (Runware ou Replicate) selon les modèles utilisés.
+| Service | FQDN | Port interne |
+|---------|------|--------------|
+| `backend` | `https://api.reeltok.tondomaine.com` | `8000` |
+| `dashboard` | `https://reeltok.tondomaine.com` | `3000` |
 
-### Volume persistant (recommandé)
+**DNS** :
+```
+reeltok.tondomaine.com      A  →  IP_SERVEUR
+api.reeltok.tondomaine.com  A  →  IP_SERVEUR
+```
 
-L'automatisation et l'historique sont stockés dans `data/`.
+## 4. Deploy
 
-1. Service Railway → **Volumes** → **Add Volume**
-2. Monter sur `/app/data`
-3. Taille : 1–5 Go selon usage
+1. **Deploy** manuel la première fois (build long : Playwright ~10 min)
+2. Active **Auto Deploy** sur `main` → chaque `git push` redéploie
 
-Sans volume, les données sont perdues à chaque redéploiement.
-
-### Ressources
-
-- **RAM** : minimum **2 Go** (Playwright + génération d'images)
-- Healthcheck : `GET /health`
-
-### Domaine public
-
-Settings → **Networking** → **Generate Domain**
-
-Copier l'URL (ex. `https://reeltok-production.up.railway.app`) pour Vercel.
-
----
-
-## 2. Frontend sur Vercel
-
-### Créer le projet
-
-1. [vercel.com](https://vercel.com) → **Add New Project**
-2. Importer `IndieFear/reeltok`
-3. **Root Directory** : `dashboard` (important)
-4. Framework : Next.js (auto-détecté)
-
-### Variable d'environnement
-
-| Variable | Valeur |
-|----------|--------|
-| `NEXT_PUBLIC_API_URL` | URL Railway du backend (sans slash final) |
-
-Exemple : `https://reeltok-production.up.railway.app`
-
-Redéployer après modification de cette variable.
-
----
-
-## 3. Vérification
+## 5. Vérification
 
 ```bash
-# Backend
-curl https://TON-URL-RAILWAY/health
+curl https://api.reeltok.tondomaine.com/health
 # → {"status":"ok"}
-
-# Frontend
-# Ouvrir https://ton-projet.vercel.app/editor
-# Vérifier que les appels API ne sont pas bloqués (CORS déjà configuré pour *.vercel.app)
 ```
 
----
+Ouvre `https://reeltok.tondomaine.com/editor` — les appels API doivent aller vers `api.reeltok.tondomaine.com`.
 
-## 4. Déploiement via CLI (optionnel)
+## Données persistantes
 
-### Railway
+Le volume `reeltok-data` est monté sur `/app/data` (queue automation, historique, carousels).
 
-```bash
-brew install railway
-cd /chemin/vers/reeltok
-railway login
-railway init
-railway up
-railway domain
-```
+## Ressources recommandées
 
-### Vercel
-
-```bash
-npm i -g vercel
-cd dashboard
-vercel login
-vercel --prod
-# Puis configurer NEXT_PUBLIC_API_URL dans le dashboard Vercel
-```
-
----
+Serveur **4 Go RAM** minimum (Coolify + Playwright + Next.js).
 
 ## Dépannage
 
-| Problème | Cause probable | Solution |
-|----------|----------------|----------|
-| Build Docker timeout | Playwright + Chromium lourd | Patience (~5–10 min premier build) |
-| 502 / crash au rendu | RAM insuffisante | Passer à 2 Go+ sur Railway |
-| CORS error frontend | Mauvaise URL API | Vérifier `NEXT_PUBLIC_API_URL` |
-| Queue automation vide après redeploy | Pas de volume | Ajouter volume `/app/data` |
-| Images sans police TikTok | Chemin font | `FONT_SCALE` ou fonts dans `assets/fonts/` (inclus dans l'image Docker) |
+| Problème | Solution |
+|----------|----------|
+| Frontend appelle `localhost:8000` | `API_URL` incorrecte → redeploy **dashboard** |
+| CORS error | `DASHBOARD_URL` doit matcher l'URL du dashboard |
+| Carousel bloque | `CAROUSEL_RENDER_CONCURRENCY=1`, augmenter la RAM |
+| Build timeout | Augmenter le timeout build dans Coolify |

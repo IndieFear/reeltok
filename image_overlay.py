@@ -13,7 +13,7 @@ try:
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
-# Flags requis pour Chromium dans Docker/Railway (évite les blocages sur /dev/shm)
+# Flags requis pour Chromium en conteneur Docker (évite les blocages sur /dev/shm)
 CHROMIUM_DOCKER_ARGS = [
     "--no-sandbox",
     "--disable-setuid-sandbox",

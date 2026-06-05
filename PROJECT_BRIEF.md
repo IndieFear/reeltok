@@ -657,9 +657,7 @@ Le projet doit pouvoir etre heberge en ligne pour un usage personnel.
 
 Options simples :
 
-- frontend Next.js sur Vercel ;
-- backend FastAPI sur Render, Railway ou Fly.io ;
-- ou une seule app sur VPS/Railway si c'est plus simple ;
+- déploiement via Coolify (Docker Compose : backend + dashboard) ;
 - stockage local persistant si l'hebergeur le permet ;
 - stockage objet plus tard si besoin.
 

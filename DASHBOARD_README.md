@@ -36,7 +36,4 @@ Ouvre http://localhost:3000
 
 ## Déploiement
 
-Voir le guide complet : [DEPLOY.md](../DEPLOY.md)
-
-- **Vercel** : root directory `dashboard/`, variable `NEXT_PUBLIC_API_URL`
-- **Railway** : Dockerfile à la racine, volume sur `/app/data`, 2 Go+ RAM
+Voir [DEPLOY.md](../DEPLOY.md) — déployé via Coolify avec le service `dashboard` du `docker-compose.yml`.

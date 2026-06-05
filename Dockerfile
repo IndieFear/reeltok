@@ -15,7 +15,7 @@ RUN playwright install --with-deps chromium
 
 COPY . .
 
-# Données persistantes (monter un volume Railway sur /app/data)
+# Données persistantes (volume Docker reeltok-data → /app/data)
 RUN mkdir -p /app/data
 
 ENV PYTHONUNBUFFERED=1
