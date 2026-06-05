@@ -16,6 +16,9 @@ services:
       UPLOAD_POST_API_KEY: ${UPLOAD_POST_API_KEY}
       UPLOAD_POST_USER: ${UPLOAD_POST_USER}
       FONT_SCALE: ${FONT_SCALE:-1.0}
+      APP_PASSWORD: ${APP_PASSWORD}
+      AUTH_SECRET: ${AUTH_SECRET}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\""]
       interval: 30s

@@ -25,8 +25,17 @@ Dans l'onglet **Environment Variables** (voir `.env.example`) :
 | `UPLOAD_POST_USER` | `...` | Compte upload-post |
 | `FONT_SCALE` | `1.0` | Taille texte overlay |
 | `CAROUSEL_RENDER_CONCURRENCY` | `1` | Rendu Playwright (1 slide à la fois) |
+| `APP_PASSWORD` | mot de passe fort | Protection login dashboard + API |
+| `AUTH_SECRET` | chaîne aléatoire 32+ car. | Signature des sessions (`openssl rand -hex 32`) |
+| `COOKIE_DOMAIN` | `.tondomaine.com` | Optionnel — auto-détecté depuis `DASHBOARD_URL` |
 
 > `API_URL` et `DASHBOARD_URL` doivent être les URLs **HTTPS finales** configurées à l'étape 3.
+
+## Sécurité
+
+- Page `/login` avant d'accéder au dashboard
+- Toutes les routes `/api/*` (sauf login/status) exigent une session valide
+- Anti-bruteforce : 5 tentatives / 15 min → blocage 30 min par IP
 
 ## 3. Domaines (2 FQDN)
 

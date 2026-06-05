@@ -1,5 +1,25 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
+  return fetch(url, { credentials: "include", ...init });
+}
+
+export async function login(password: string): Promise<void> {
+  const res = await apiFetch(`${API_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || "Connexion impossible");
+  }
+}
+
+export async function logout(): Promise<void> {
+  await apiFetch(`${API_URL}/api/auth/logout`, { method: "POST" });
+}
+
 export type ImageModel = "runware" | "replicate-gpt-image-2" | "replicate-grok-imagine-image";
 
 export const IMAGE_MODELS: { id: ImageModel; label: string }[] = [
@@ -70,7 +90,7 @@ export interface ContentType {
 }
 
 export async function getContentTypes(): Promise<ContentType[]> {
-  const res = await fetch(`${API_URL}/api/content-types`);
+  const res = await apiFetch(`${API_URL}/api/content-types`);
   if (!res.ok) throw new Error("Erreur chargement types de contenu");
   return res.json();
 }
@@ -85,7 +105,7 @@ export async function getPromptPreview(
     content_type: contentType,
     num_slides: String(numSlides),
   });
-  const res = await fetch(`${API_URL}/api/prompt-preview?${params}`);
+  const res = await apiFetch(`${API_URL}/api/prompt-preview?${params}`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur chargement prompt");
@@ -101,7 +121,7 @@ export async function generateContent(
   variationIndex: number = 0,
   customPrompt?: string | null
 ): Promise<CarouselContent> {
-  const res = await fetch(`${API_URL}/api/generate-content`, {
+  const res = await apiFetch(`${API_URL}/api/generate-content`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -121,7 +141,7 @@ export async function generateContent(
 }
 
 export async function listContentHistory(): Promise<ContentHistoryEntry[]> {
-  const res = await fetch(`${API_URL}/api/content-history`);
+  const res = await apiFetch(`${API_URL}/api/content-history`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur chargement historique");
@@ -131,7 +151,7 @@ export async function listContentHistory(): Promise<ContentHistoryEntry[]> {
 }
 
 export async function getContentHistoryEntry(id: string): Promise<ContentHistoryEntry> {
-  const res = await fetch(`${API_URL}/api/content-history/${id}`);
+  const res = await apiFetch(`${API_URL}/api/content-history/${id}`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur ouverture historique");
@@ -140,7 +160,7 @@ export async function getContentHistoryEntry(id: string): Promise<ContentHistory
 }
 
 export async function deleteContentHistoryEntry(id: string): Promise<void> {
-  const res = await fetch(`${API_URL}/api/content-history/${id}`, {
+  const res = await apiFetch(`${API_URL}/api/content-history/${id}`, {
     method: "DELETE",
   });
   if (!res.ok) {
@@ -154,7 +174,7 @@ export async function fetchContentHistoryImage(
   slideIndex: number,
   filename: string = `history_slide_${slideIndex + 1}.jpg`
 ): Promise<File> {
-  const res = await fetch(`${API_URL}/api/content-history/${historyId}/image/${slideIndex}`);
+  const res = await apiFetch(`${API_URL}/api/content-history/${historyId}/image/${slideIndex}`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur chargement image historique");
@@ -170,7 +190,7 @@ export async function generateImagesFromPrompts(
   historyId?: string | null,
   slideIndices?: number[]
 ): Promise<{ images: GeneratedImageResult[] }> {
-  const res = await fetch(`${API_URL}/api/generate-images-from-prompts`, {
+  const res = await apiFetch(`${API_URL}/api/generate-images-from-prompts`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -195,7 +215,7 @@ export async function generateSingleImage(
   imageModel: ImageModel = "runware",
   historyId?: string | null
 ): Promise<GeneratedImageResult> {
-  const res = await fetch(`${API_URL}/api/generate-single-image`, {
+  const res = await apiFetch(`${API_URL}/api/generate-single-image`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -214,13 +234,13 @@ export async function generateSingleImage(
 }
 
 export async function getTemplates(): Promise<TemplatesResponse> {
-  const res = await fetch(`${API_URL}/api/templates`);
+  const res = await apiFetch(`${API_URL}/api/templates`);
   if (!res.ok) throw new Error("Erreur chargement templates");
   return res.json();
 }
 
 export async function fetchLeafeeImage(): Promise<File> {
-  const res = await fetch(`${API_URL}/api/leafee-image`);
+  const res = await apiFetch(`${API_URL}/api/leafee-image`);
   if (!res.ok) throw new Error("Image Leafee introuvable");
   const blob = await res.blob();
   return new File([blob], "leafee.jpg", { type: "image/jpeg" });
@@ -233,14 +253,14 @@ export interface GirlsImage {
 }
 
 export async function listGirlsImages(): Promise<GirlsImage[]> {
-  const res = await fetch(`${API_URL}/api/girls-images`);
+  const res = await apiFetch(`${API_URL}/api/girls-images`);
   if (!res.ok) throw new Error("Erreur chargement images");
   const data = await res.json();
   return data.images;
 }
 
 export async function fetchGirlImage(imageId: string): Promise<File> {
-  const res = await fetch(`${API_URL}/api/fille-image/${imageId}`);
+  const res = await apiFetch(`${API_URL}/api/fille-image/${imageId}`);
   if (!res.ok) throw new Error(`Image ${imageId} introuvable`);
   const blob = await res.blob();
   return new File([blob], `${imageId}.png`, { type: "image/png" });
@@ -256,7 +276,7 @@ export interface PromptOverridesResponse {
 }
 
 export async function getPromptConfig(): Promise<PromptOverridesResponse> {
-  const res = await fetch(`${API_URL}/api/prompt-config`);
+  const res = await apiFetch(`${API_URL}/api/prompt-config`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur chargement config de prompts");
@@ -265,7 +285,7 @@ export async function getPromptConfig(): Promise<PromptOverridesResponse> {
 }
 
 export async function savePromptConfig(payload: PromptOverridesResponse): Promise<PromptOverridesResponse> {
-  const res = await fetch(`${API_URL}/api/prompt-config`, {
+  const res = await apiFetch(`${API_URL}/api/prompt-config`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -294,7 +314,7 @@ export async function generateCarousel(
   form.append("slides_content", JSON.stringify(slidesContent));
   images.forEach((img) => form.append("images", img));
 
-  const res = await fetch(`${API_URL}/api/generate-carousel`, {
+  const res = await apiFetch(`${API_URL}/api/generate-carousel`, {
     method: "POST",
     body: form,
   });
@@ -313,7 +333,7 @@ export async function previewSlide(
   form.append("slide_content", JSON.stringify(slideContent));
   form.append("image", image);
 
-  const res = await fetch(`${API_URL}/api/preview-slide`, {
+  const res = await apiFetch(`${API_URL}/api/preview-slide`, {
     method: "POST",
     body: form,
   });
@@ -338,7 +358,7 @@ export async function publishCarousel(
   if (uploadPostUser) form.append("upload_post_user", uploadPostUser);
   images.forEach((img) => form.append("images", img));
 
-  const res = await fetch(`${API_URL}/api/publish`, {
+  const res = await apiFetch(`${API_URL}/api/publish`, {
     method: "POST",
     body: form,
   });
@@ -431,7 +451,7 @@ export interface AutomationConfigResponse {
 }
 
 export async function getAutomationConfig(): Promise<AutomationConfigResponse> {
-  const res = await fetch(`${API_URL}/api/automation/config`);
+  const res = await apiFetch(`${API_URL}/api/automation/config`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur chargement config automation");
@@ -440,7 +460,7 @@ export async function getAutomationConfig(): Promise<AutomationConfigResponse> {
 }
 
 export async function saveAutomationConfig(config: AutomationConfig): Promise<{ config: AutomationConfig }> {
-  const res = await fetch(`${API_URL}/api/automation/config`, {
+  const res = await apiFetch(`${API_URL}/api/automation/config`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(config),
@@ -457,7 +477,7 @@ export function automationSlideUrl(relativeUrl: string): string {
 }
 
 export async function getAutomationJob(jobId: string): Promise<AutomationJobDetail> {
-  const res = await fetch(`${API_URL}/api/automation/jobs/${jobId}`);
+  const res = await apiFetch(`${API_URL}/api/automation/jobs/${jobId}`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur chargement job");
@@ -466,7 +486,7 @@ export async function getAutomationJob(jobId: string): Promise<AutomationJobDeta
 }
 
 export async function listAutomationJobs(): Promise<{ jobs: AutomationJob[]; total: number }> {
-  const res = await fetch(`${API_URL}/api/automation/jobs`);
+  const res = await apiFetch(`${API_URL}/api/automation/jobs`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur chargement jobs");
@@ -482,7 +502,7 @@ export async function syncAutomationSheet(sheetCsvUrl?: string): Promise<{
   generated: number;
   rows_in_sheet: number;
 }> {
-  const res = await fetch(`${API_URL}/api/automation/sync-sheet`, {
+  const res = await apiFetch(`${API_URL}/api/automation/sync-sheet`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(sheetCsvUrl ? { sheet_csv_url: sheetCsvUrl } : {}),
@@ -498,7 +518,7 @@ export async function updateAutomationJobSchedule(
   jobId: string,
   scheduledAt: string,
 ): Promise<{ success: boolean; job: AutomationJob }> {
-  const res = await fetch(`${API_URL}/api/automation/jobs/${jobId}/schedule`, {
+  const res = await apiFetch(`${API_URL}/api/automation/jobs/${jobId}/schedule`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ scheduled_at: scheduledAt }),
@@ -511,7 +531,7 @@ export async function updateAutomationJobSchedule(
 }
 
 export async function deleteAutomationJob(jobId: string): Promise<{ success: boolean }> {
-  const res = await fetch(`${API_URL}/api/automation/jobs/${jobId}`, { method: "DELETE" });
+  const res = await apiFetch(`${API_URL}/api/automation/jobs/${jobId}`, { method: "DELETE" });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur suppression job");
@@ -520,7 +540,7 @@ export async function deleteAutomationJob(jobId: string): Promise<{ success: boo
 }
 
 export async function generateAutomationJob(jobId: string): Promise<{ success: boolean; job: AutomationJob }> {
-  const res = await fetch(`${API_URL}/api/automation/jobs/${jobId}/generate`, { method: "POST" });
+  const res = await apiFetch(`${API_URL}/api/automation/jobs/${jobId}/generate`, { method: "POST" });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur génération job");
@@ -529,7 +549,7 @@ export async function generateAutomationJob(jobId: string): Promise<{ success: b
 }
 
 export async function publishAutomationJob(jobId: string): Promise<{ success: boolean; job: AutomationJob }> {
-  const res = await fetch(`${API_URL}/api/automation/jobs/${jobId}/publish`, { method: "POST" });
+  const res = await apiFetch(`${API_URL}/api/automation/jobs/${jobId}/publish`, { method: "POST" });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur publication job");
@@ -538,7 +558,7 @@ export async function publishAutomationJob(jobId: string): Promise<{ success: bo
 }
 
 export async function generatePendingAutomationJobs(limit = 5): Promise<{ success: boolean; generated: number }> {
-  const res = await fetch(`${API_URL}/api/automation/generate-pending?limit=${limit}`, { method: "POST" });
+  const res = await apiFetch(`${API_URL}/api/automation/generate-pending?limit=${limit}`, { method: "POST" });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur génération jobs en attente");
@@ -553,7 +573,7 @@ export async function runDueAutomationJobs(): Promise<{
   published: number;
   errors: number;
 }> {
-  const res = await fetch(`${API_URL}/api/automation/run-due`, { method: "POST" });
+  const res = await apiFetch(`${API_URL}/api/automation/run-due`, { method: "POST" });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur exécution jobs dus");
