@@ -44,6 +44,18 @@ def get_app_password() -> str:
     return os.getenv("APP_PASSWORD", "").strip()
 
 
+def cookie_domain_from_origin(origin: str | None) -> str | None:
+    """Déduit le domaine parent depuis l'en-tête Origin (ex. dashboard → cookie partagé)."""
+    if not origin:
+        return None
+    host = urlparse(origin).hostname
+    if host and host not in {"localhost", "127.0.0.1"} and "." in host:
+        parts = host.split(".")
+        if len(parts) >= 2:
+            return f".{'.'.join(parts[-2:])}"
+    return None
+
+
 def cookie_domain() -> str | None:
     explicit = os.getenv("COOKIE_DOMAIN", "").strip()
     if explicit:

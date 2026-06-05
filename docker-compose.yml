@@ -36,6 +36,9 @@ services:
         NEXT_PUBLIC_API_URL: ${API_URL:-https://placeholder.invalid}
         NEXT_PUBLIC_AUTH_REQUIRED: ${AUTH_REQUIRED:-true}
     restart: unless-stopped
+    environment:
+      INTERNAL_API_URL: http://backend:8000
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
     expose:
       - "3000"
     depends_on:

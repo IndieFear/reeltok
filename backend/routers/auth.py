@@ -14,6 +14,7 @@ from backend.services.auth import (
     check_login_allowed,
     clear_login_attempts,
     cookie_domain,
+    cookie_domain_from_origin,
     cookie_secure,
     create_session_token,
     login_failure_delay,
@@ -49,8 +50,12 @@ def _is_authenticated(request: Request) -> bool:
     return verify_session_token(token)
 
 
-def _set_session_cookie(response: Response, token: str) -> None:
-    domain = cookie_domain()
+def _resolve_cookie_domain(request: Request) -> str | None:
+    return cookie_domain_from_origin(request.headers.get("origin")) or cookie_domain()
+
+
+def _set_session_cookie(response: Response, token: str, request: Request | None = None) -> None:
+    domain = _resolve_cookie_domain(request) if request else cookie_domain()
     response.set_cookie(
         key=SESSION_COOKIE,
         value=token,
@@ -79,7 +84,10 @@ def auth_status(request: Request):
 @router.post("/auth/login")
 async def login(body: LoginRequest, request: Request, response: Response):
     if not auth_enabled():
-        return {"ok": True, "auth": "disabled"}
+        raise HTTPException(
+            status_code=503,
+            detail="APP_PASSWORD non configuré sur le backend.",
+        )
 
     client_ip = _client_ip(request)
     allowed, retry_after = check_login_allowed(client_ip)
@@ -97,8 +105,8 @@ async def login(body: LoginRequest, request: Request, response: Response):
 
     clear_login_attempts(client_ip)
     token = create_session_token()
-    _set_session_cookie(response, token)
-    return {"ok": True}
+    _set_session_cookie(response, token, request)
+    return {"ok": True, "token": token}
 
 
 @router.post("/auth/logout")

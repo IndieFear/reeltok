@@ -5,10 +5,11 @@ async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
 }
 
 export async function login(password: string): Promise<void> {
-  const res = await apiFetch(`${API_URL}/api/auth/login`, {
+  const res = await fetch("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ password }),
+    credentials: "include",
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
@@ -17,7 +18,7 @@ export async function login(password: string): Promise<void> {
 }
 
 export async function logout(): Promise<void> {
-  await apiFetch(`${API_URL}/api/auth/logout`, { method: "POST" });
+  await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
 }
 
 export type ImageModel = "runware" | "replicate-gpt-image-2" | "replicate-grok-imagine-image";
