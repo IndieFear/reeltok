@@ -46,7 +46,6 @@ Ouvre http://localhost:3000
 
 ## Déploiement
 
-- **Backend** : Railway (Docker + Playwright) — voir [DEPLOY.md](DEPLOY.md)
-- **Frontend** : Vercel (`dashboard/`)
-
-Guide pas à pas : variables d'env, volume persistant, domaine public.
+- **Hetzner + Coolify** (recommandé) : voir [deploy/COOLIFY.md](deploy/COOLIFY.md)
+- **VPS Hetzner** (Docker Compose manuel) : voir [deploy/HETZNER.md](deploy/HETZNER.md)
+- **Railway + Vercel** : voir [DEPLOY.md](DEPLOY.md)

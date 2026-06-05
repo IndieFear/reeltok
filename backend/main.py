@@ -4,6 +4,7 @@ Expose les endpoints pour génération de contenu, rendu des slides et publicati
 """
 
 import logging
+import os
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -48,9 +49,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_cors_origins = ["http://localhost:3000", "http://localhost:3001"]
+_public_url = os.getenv("PUBLIC_URL", "").rstrip("/")
+if _public_url:
+    _cors_origins.append(_public_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "https://*.vercel.app"],
+    allow_origins=_cors_origins,
     allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
