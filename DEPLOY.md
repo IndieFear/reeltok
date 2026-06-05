@@ -27,7 +27,10 @@ Dans l'onglet **Environment Variables** (voir `.env.example`) :
 | `CAROUSEL_RENDER_CONCURRENCY` | `1` | Rendu Playwright (1 slide à la fois) |
 | `APP_PASSWORD` | mot de passe fort | Protection login dashboard + API |
 | `AUTH_SECRET` | chaîne aléatoire 32+ car. | Signature des sessions (`openssl rand -hex 32`) |
+| `AUTH_REQUIRED` | `true` | Active la page login (buildtime pour dashboard) |
 | `COOKIE_DOMAIN` | `.tondomaine.com` | Optionnel — auto-détecté depuis `DASHBOARD_URL` |
+
+> `APP_PASSWORD`, `AUTH_SECRET` et `AUTH_REQUIRED` doivent être définies. Sans `APP_PASSWORD` sur le **backend**, l'API reste ouverte.
 
 > `API_URL` et `DASHBOARD_URL` doivent être les URLs **HTTPS finales** configurées à l'étape 3.
 
